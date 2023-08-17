@@ -2,9 +2,17 @@ import { sql } from "@vercel/postgres";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { NewProduct } from "./components/new.product";
+import { BidInput } from "./components/bid.input";
 
 export default async function Home() {
   const { rows } = await sql`SELECT * FROM bids ORDER BY id DESC`;
+  const addBid = async (id: number, bid: number) => {
+    "use server";
+
+    const login = cookies().get("login");
+    await sql`UPDATE bids SET total_bids = total_bids + ${bid} WHERE id = ${id}`;
+    revalidatePath("/");
+  };
   const addProduct = async (product: string) => {
     "use server";
 
@@ -34,6 +42,9 @@ export default async function Home() {
             </div>
             <div className="text-lg">
               <strong>Current Bid</strong>: {product.total_bids}
+            </div>
+            <div>
+              <BidInput addBid={addBid} id={product.id} />
             </div>
           </div>
         ))}
